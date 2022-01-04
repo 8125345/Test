@@ -1,0 +1,51 @@
+import os, cv2
+words_list = [
+    "A", "B", "C", "D", "E",
+    "F", "G", "H", "J", "K",
+    "L", "M", "N", "P", "Q",
+    "R", "S", "T", "U", "V",
+    "W", "X", "Y", "Z", "0",
+    "1", "2", "3", "4", "5",
+    "6", "7", "8", "9"]
+
+con_list = [
+    "皖", "沪", "津", "渝", "冀",
+    "晋", "蒙", "辽", "吉", "黑",
+    "苏", "浙", "京", "闽", "赣",
+    "鲁", "豫", "鄂", "湘", "粤",
+    "桂", "琼", "川", "贵", "云",
+    "西", "陕", "甘", "青", "宁",
+    "新"]
+
+base_dir = '/Users/clustar/Desktop/项目/车牌识别/CCPD2019/'
+count = 0
+data = open(f'{base_dir}/data_det.txt', 'w', encoding='UTF-8')
+for item in os.listdir(f'{base_dir}/ccpd_base'):
+    # print(item)
+    path = 'img/'+item
+    _, _, bbox, points, label, _, _ = item.split('-')
+    points = points.split('_')
+    points = [_.split('&') for _ in points]
+    tmp = points[-2:]+points[:2]
+    points = []
+    for point in tmp:
+        points.append([int(_) for _ in point])
+    label = label.split('_')
+    con = con_list[int(label[0])]
+    words = [words_list[int(_)] for _ in label[1:]]
+    label = con+''.join(words)
+    line = path+'\t'+'[{"transcription": "%s", "points": %s}]' % (label, str(points))
+    line = line[:]+'\n'
+    data.write(line)
+total = []
+with open(f'{base_dir}/data_det.txt', 'r', encoding='UTF-8') as f:
+    for line in f:
+        total.append(line)
+print(len(total))
+with open(f'{base_dir}/train_det.txt', 'w', encoding='UTF-8') as f:
+    for line in total[:-500]:
+        f.write(line)
+
+with open(f'{base_dir}/evl_det.txt', 'w', encoding='UTF-8') as f:
+    for line in total[-500:]:
+        f.write(line)
